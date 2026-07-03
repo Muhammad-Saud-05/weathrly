@@ -1,14 +1,15 @@
 from fastapi import FastAPI
 from app.db.database import Base, engine
-from app.models.user import User
+from app.api.users import router as user_router
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Weathrly API",
-    description="AI-powered weather backend",
     version="1.0.0"
 )
+
+app.include_router(user_router)
 
 @app.get("/")
 def root():
