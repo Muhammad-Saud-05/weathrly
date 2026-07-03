@@ -17,3 +17,5 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base class for all database tables
 Base = declarative_base()
+
+from app.models.user import User
