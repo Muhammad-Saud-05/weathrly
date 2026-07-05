@@ -3,6 +3,7 @@ from app.db.database import Base, engine
 from app.api.users import router as user_router
 from app.api.weather import router as weather_router
 from dotenv import load_dotenv
+from app.models import base
 
 load_dotenv()
 Base.metadata.create_all(bind=engine)
