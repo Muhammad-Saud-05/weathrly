@@ -5,6 +5,7 @@ from app.services.weather_service import get_current_weather, get_forecast
 from app.db.database import SessionLocal
 from app.models.search_history import SearchHistory
 from app.dependencies import get_current_user
+from app.utils.normalizer import normalize_city
 
 router = APIRouter(prefix="/weather", tags=["Weather"])
 
@@ -25,6 +26,7 @@ def current_weather(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
+    city = normalize_city(city)
     result = get_current_weather(city)
 
     if "status_code" in result:
@@ -32,7 +34,7 @@ def current_weather(
 
     history = SearchHistory(
         user_id=current_user.id,
-        city_name=result["city"],
+        city_name=city,
         country=result["country"]
     )
 
