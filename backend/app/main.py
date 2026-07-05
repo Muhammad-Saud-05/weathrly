@@ -5,6 +5,7 @@ from app.api.weather import router as weather_router
 from dotenv import load_dotenv
 from app.models import base
 from app.api import favorites
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 Base.metadata.create_all(bind=engine)
@@ -12,6 +13,14 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Weathrly API",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(user_router)

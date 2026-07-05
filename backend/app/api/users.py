@@ -40,7 +40,9 @@ def login(
     db: Session = Depends(get_db)
 ):
 
+    print("LOGIN ATTEMPT:", form_data.username)
     user = db.query(User).filter(User.email == form_data.username).first()
+    print("USER FOUND:", user)
 
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
