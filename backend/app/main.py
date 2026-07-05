@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.db.database import Base, engine
 from app.api.users import router as user_router
+from app.api.weather import router as weather_router
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,6 +13,7 @@ app = FastAPI(
 )
 
 app.include_router(user_router)
+app.include_router(weather_router)
 
 @app.get("/")
 def root():

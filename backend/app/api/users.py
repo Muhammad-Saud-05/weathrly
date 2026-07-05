@@ -6,23 +6,13 @@ from app.models.user import User
 from app.db.database import SessionLocal
 from app.core.security import hash_password
 
-from app.schemas.auth import LoginRequest
 from app.core.security import verify_password
 from app.core.jwt import create_access_token
-from app.dependencies import get_current_user
+from app.dependencies import get_db, get_current_user
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.services.weather_service import get_current_weather
 
 router = APIRouter()
-
-# Dependency: gives DB session to each request
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.post("/users")
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -74,7 +64,3 @@ def get_me(current_user: User = Depends(get_current_user)):
         "username": current_user.username,
         "email": current_user.email
     }
-
-@router.get("/weather/current")
-def current_weather(city: str):
-    return get_current_weather(city)
