@@ -8,6 +8,7 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [history, setHistory] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<any[]>([]);
+  const [forecast, setForecast] = useState<any[]>([]);
 
   // Fetch weather
   const fetchWeather = async () => {
@@ -23,6 +24,7 @@ export default function Dashboard() {
     setWeather(res.data);
 
     await fetchHistory();
+    await fetchForecast(city);
 
     } catch (err: any) {
     console.log(err);
@@ -61,7 +63,6 @@ export default function Dashboard() {
         country: weather.country,
       });
 
-      // refresh list after adding
       await fetchFavorites();
     } catch (err: any) {
       console.log("Failed to add favorite", err);
@@ -87,11 +88,62 @@ export default function Dashboard() {
       setWeather(res.data);
 
       await fetchHistory();
+      await fetchForecast(cityName);
     } catch (err) {
       console.log(err);
       setError("Could not fetch weather");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch forecast
+  const fetchForecast = async (cityName: string) => {
+    try {
+      const res = await api.get(`/weather/forecast?city=${cityName}`);
+
+      console.log("RAW FORECAST:", res.data);
+
+      const list = res.data;
+
+      if (!Array.isArray(list)) {
+        setForecast([]);
+        return;
+      }
+
+      const grouped: Record<string, any> = {};
+
+      list.forEach((item: any) => {
+        const date = item.datetime.split(" ")[0]; // IMPORTANT FIX
+
+        if (!grouped[date]) {
+          grouped[date] = {
+            temps: [],
+            descriptions: [],
+          };
+        }
+
+        grouped[date].temps.push(item.temperature);
+        grouped[date].descriptions.push(item.description);
+      });
+
+      const formatted = Object.keys(grouped).map((date) => {
+        const temps = grouped[date].temps;
+
+        return {
+          date,
+          min: Math.min(...temps),
+          max: Math.max(...temps),
+          description: grouped[date].descriptions[0],
+        };
+      });
+
+      console.log("FORMATTED FORECAST:", formatted);
+
+      setForecast(formatted);
+    } catch (err) {
+      console.log("Failed to fetch forecast", err);
+      setForecast([]);
     }
   };
 
@@ -130,7 +182,6 @@ export default function Dashboard() {
           <p>Feels like: {weather.feels_like}°C</p>
           <p>Humidity: {weather.humidity}%</p>
           <p>{weather.description}</p>
-
           <button
             onClick={addFavorite}
             style={{ marginTop: "10px" }}
@@ -150,12 +201,36 @@ export default function Dashboard() {
           <ul>
             {history.map((item) => (
               <li key={item.id}>
-                {item.city_name}{" "}
-                {item.country ? `(${item.country})` : ""}
+                <span
+                  style={{ cursor: "pointer" }}
+                  onClick={() => fetchWeatherFromFavorite(item.city_name)}
+                >
+                  {item.city_name}{" "}
+                  {item.country ? `(${item.country})` : ""}
+                </span>
               </li>
             ))}
           </ul>
         )}
+
+        {/* Forecast section */}
+        <div style={{ marginTop: "40px" }}>
+          <h2>5-Day Forecast</h2>
+
+          {forecast.length === 0 ? (
+            <p>No forecast data</p>
+          ) : (
+            <ul>
+              {forecast.map((day, index) => (
+                <li key={index}>
+                  <strong>{day.date}</strong> —
+                  {day.min.toFixed(1)}°C / {day.max.toFixed(1)}°C —
+                  {day.description}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         {/* Favorites section */}
         <div style={{ marginTop: "40px" }}>
