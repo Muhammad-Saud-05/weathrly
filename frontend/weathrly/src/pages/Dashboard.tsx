@@ -7,6 +7,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [history, setHistory] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<any[]>([]);
 
   // Fetch weather
   const fetchWeather = async () => {
@@ -41,9 +42,63 @@ export default function Dashboard() {
     }
   };
 
+  // Fetch favorites
+  const fetchFavorites = async () => {
+    try {
+      const res = await api.get("/favorites/");
+      setFavorites(res.data);
+    } catch (err) {
+      console.log("Failed to fetch favorites", err);
+    }
+  };
+
+  const addFavorite = async () => {
+  if (!weather) return;
+
+    try {
+      await api.post("/favorites/", {
+        city_name: weather.city,
+        country: weather.country,
+      });
+
+      // refresh list after adding
+      await fetchFavorites();
+    } catch (err: any) {
+      console.log("Failed to add favorite", err);
+      alert(err?.response?.data?.detail || "Could not add favorite");
+    }
+  };
+
+  const deleteFavorite = async (id: number) => {
+    try {
+      await api.delete(`/favorites/${id}`);
+      await fetchFavorites();
+    } catch (err) {
+      console.log("Failed to delete favorite", err);
+    }
+  };
+
+  const fetchWeatherFromFavorite = async (cityName: string) => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await api.get(`/weather/current?city=${cityName}`);
+      setWeather(res.data);
+
+      await fetchHistory();
+    } catch (err) {
+      console.log(err);
+      setError("Could not fetch weather");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load history on page load
   useEffect(() => {
     fetchHistory();
+    fetchFavorites();
   }, []);
 
   return (
@@ -63,7 +118,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Loading / error */}
+      {/* Loading error */}
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
@@ -75,6 +130,13 @@ export default function Dashboard() {
           <p>Feels like: {weather.feels_like}°C</p>
           <p>Humidity: {weather.humidity}%</p>
           <p>{weather.description}</p>
+
+          <button
+            onClick={addFavorite}
+            style={{ marginTop: "10px" }}
+          >
+            Save Favorite ⭐
+          </button>
         </div>
       )}
 
@@ -94,7 +156,36 @@ export default function Dashboard() {
             ))}
           </ul>
         )}
+
+        {/* Favorites section */}
+        <div style={{ marginTop: "40px" }}>
+          <h2>Favorite Cities</h2>
+
+          {favorites.length === 0 ? (
+            <p>No favorite cities yet</p>
+          ) : (
+            <ul>
+              {favorites.map((favorite) => (
+                <li key={favorite.id}>
+                  {/* Click city to reuse */}
+                  <span
+                    style={{ cursor: "pointer", marginRight: "10px" }}
+                    onClick={() => fetchWeatherFromFavorite(favorite.city_name)}
+                  >
+                    {favorite.city_name}
+                    {favorite.country ? ` (${favorite.country})` : ""}
+                  </span>
+
+                  {/* Delete button */}
+                  <button onClick={() => deleteFavorite(favorite.id)}>
+                    ❌
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          </div>
+        </div>
       </div>
-    </div>
   );
 }
