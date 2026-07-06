@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [history, setHistory] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<any[]>([]);
   const [forecast, setForecast] = useState<any[]>([]);
+  const [activeCity, setActiveCity] = useState<string>("");
 
   // Fetch weather
   const fetchWeather = async () => {
@@ -22,6 +23,7 @@ export default function Dashboard() {
     const res = await api.get(`/weather/current?city=${city}`);
 
     setWeather(res.data);
+    setActiveCity(city);
 
     await fetchHistory();
     await fetchForecast(city);
@@ -86,6 +88,7 @@ export default function Dashboard() {
     try {
       const res = await api.get(`/weather/current?city=${cityName}`);
       setWeather(res.data);
+      setActiveCity(cityName);
 
       await fetchHistory();
       await fetchForecast(cityName);
@@ -147,6 +150,18 @@ export default function Dashboard() {
     }
   };
 
+  const getWeatherIcon = (desc: string) => {
+    const d = desc.toLowerCase();
+
+      if (d.includes("clear")) return "☀️";
+      if (d.includes("cloud")) return "☁️";
+      if (d.includes("rain")) return "🌧️";
+      if (d.includes("storm")) return "⛈️";
+      if (d.includes("snow")) return "❄️";
+
+      return "🌤️";
+  };
+
   // Load history on page load
   useEffect(() => {
     fetchHistory();
@@ -202,11 +217,18 @@ export default function Dashboard() {
             {history.map((item) => (
               <li key={item.id}>
                 <span
-                  style={{ cursor: "pointer" }}
                   onClick={() => fetchWeatherFromFavorite(item.city_name)}
+                  style={{
+                    cursor: "pointer",
+                    marginRight: "10px",
+                    fontWeight:
+                      activeCity === item.city_name ? "bold" : "normal",
+                    color:
+                      activeCity === item.city_name ? "blue" : "black",
+                  }}
                 >
-                  {item.city_name}{" "}
-                  {item.country ? `(${item.country})` : ""}
+                  {item.city_name}
+                  {item.country ? ` (${item.country})` : ""}
                 </span>
               </li>
             ))}
@@ -220,15 +242,30 @@ export default function Dashboard() {
           {forecast.length === 0 ? (
             <p>No forecast data</p>
           ) : (
-            <ul>
+            <div style={{ display: "grid", gap: "10px" }}>
               {forecast.map((day, index) => (
-                <li key={index}>
-                  <strong>{day.date}</strong> —
-                  {day.min.toFixed(1)}°C / {day.max.toFixed(1)}°C —
-                  {day.description}
-                </li>
+                <div
+                  key={index}
+                  style={{
+                    padding: "12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
+                    {getWeatherIcon(day.description)} {day.date}
+                  </div>
+
+                  <div style={{ fontSize: "18px" }}>
+                    {day.min.toFixed(1)}°C / {day.max.toFixed(1)}°C
+                  </div>
+
+                  <div style={{ color: "#666" }}>
+                    {day.description}
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
 
@@ -244,8 +281,15 @@ export default function Dashboard() {
                 <li key={favorite.id}>
                   {/* Click city to reuse */}
                   <span
-                    style={{ cursor: "pointer", marginRight: "10px" }}
                     onClick={() => fetchWeatherFromFavorite(favorite.city_name)}
+                    style={{
+                      cursor: "pointer",
+                      marginRight: "10px",
+                      fontWeight:
+                        activeCity === favorite.city_name ? "bold" : "normal",
+                      color:
+                        activeCity === favorite.city_name ? "green" : "black",
+                    }}
                   >
                     {favorite.city_name}
                     {favorite.country ? ` (${favorite.country})` : ""}
