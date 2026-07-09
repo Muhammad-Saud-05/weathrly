@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [favorites, setFavorites] = useState<any[]>([]);
   const [forecast, setForecast] = useState<any[]>([]);
   const [activeCity, setActiveCity] = useState<string>("");
+  const [user, setUser] = useState<any>(null);
 
   // Fetch weather
   const fetchWeather = async () => {
@@ -167,15 +168,33 @@ export default function Dashboard() {
     window.location.href = "/login";
   };
 
+  const fetchUser = async () => {
+    try {
+      const res = await api.get("/me");
+      setUser(res.data);
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+    }
+  };
+
   // Load history on page load
   useEffect(() => {
     fetchHistory();
     fetchFavorites();
+    fetchUser();
   }, []);
 
   return (
     <div style={{ maxWidth: "600px", margin: "100px auto" }}>
       <h1>Weathrly Dashboard</h1>
+
+      <h2>
+        Welcome, {user?.username}
+      </h2>
+
+      <p>
+        {user?.email}
+      </p>
 
       {/* Search box */}
       <div>
