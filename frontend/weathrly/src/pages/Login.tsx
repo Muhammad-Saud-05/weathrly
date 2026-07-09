@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { api } from "../api/axios";
 import { Link } from "react-router-dom";
-
+import { setToken } from "../utils/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -32,7 +32,7 @@ export default function Login() {
         throw new Error("No access token returned from backend");
       }
 
-      localStorage.setItem("token", token);
+      setToken(token);
 
       // redirect to dashboard
       window.location.href = "/";

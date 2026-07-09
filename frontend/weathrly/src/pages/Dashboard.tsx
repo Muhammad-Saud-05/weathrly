@@ -162,6 +162,11 @@ export default function Dashboard() {
       return "🌤️";
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
+
   // Load history on page load
   useEffect(() => {
     fetchHistory();
@@ -305,6 +310,9 @@ export default function Dashboard() {
           )}
           </div>
         </div>
+        <button onClick={handleLogout}>
+          Logout
+        </button>
       </div>
   );
 }
