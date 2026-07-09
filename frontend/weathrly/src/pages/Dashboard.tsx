@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { api } from "../api/axios";
 import WeatherSearch from "../components/weather/WeatherSearch";
 import CurrentWeather from "../components/weather/CurrentWeather";
+import Forecast from "../components/weather/Forecast";
 
 export default function Dashboard() {
   const [weather, setWeather] = useState<any>(null);
@@ -12,6 +13,7 @@ export default function Dashboard() {
   const [forecast, setForecast] = useState<any[]>([]);
   const [activeCity, setActiveCity] = useState<string>("");
   const [user, setUser] = useState<any>(null);
+
 
   // Fetch weather
   const fetchWeather = async (searchedCity: string) => {
@@ -38,6 +40,7 @@ export default function Dashboard() {
     }
   };
 
+
   // Fetch history
   const fetchHistory = async () => {
     try {
@@ -47,6 +50,7 @@ export default function Dashboard() {
       console.log("Failed to fetch history", err);
     }
   };
+
 
   // Fetch favorites
   const fetchFavorites = async () => {
@@ -58,6 +62,8 @@ export default function Dashboard() {
     }
   };
 
+
+  // Add favorites
   const addFavorite = async () => {
   if (!weather) return;
 
@@ -74,6 +80,8 @@ export default function Dashboard() {
     }
   };
 
+
+  // delete favorites
   const deleteFavorite = async (id: number) => {
     try {
       await api.delete(`/favorites/${id}`);
@@ -83,6 +91,8 @@ export default function Dashboard() {
     }
   };
 
+
+  // fetch favorites weather
   const fetchWeatherFromFavorite = async (cityName: string) => {
     setLoading(true);
     setError("");
@@ -101,6 +111,7 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+
 
   // Fetch forecast
   const fetchForecast = async (cityName: string) => {
@@ -152,6 +163,7 @@ export default function Dashboard() {
     }
   };
 
+
   const getWeatherIcon = (desc: string) => {
     const d = desc.toLowerCase();
 
@@ -164,11 +176,15 @@ export default function Dashboard() {
       return "🌤️";
   };
 
+
+  // logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     window.location.href = "/login";
   };
 
+
+  // user 
   const fetchUser = async () => {
     try {
       const res = await api.get("/me");
@@ -178,6 +194,7 @@ export default function Dashboard() {
     }
   };
 
+
   // Load history on page load
   useEffect(() => {
     fetchHistory();
@@ -185,6 +202,8 @@ export default function Dashboard() {
     fetchUser();
   }, []);
 
+
+  
   return (
     <div style={{ maxWidth: "600px", margin: "100px auto" }}>
       <h1>Weathrly Dashboard</h1>
@@ -237,39 +256,10 @@ export default function Dashboard() {
           </ul>
         )}
 
-        {/* Forecast section */}
-        <div style={{ marginTop: "40px" }}>
-          <h2>5-Day Forecast</h2>
-
-          {forecast.length === 0 ? (
-            <p>No forecast data</p>
-          ) : (
-            <div style={{ display: "grid", gap: "10px" }}>
-              {forecast.map((day, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: "12px",
-                    border: "1px solid #ddd",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
-                    {getWeatherIcon(day.description)} {day.date}
-                  </div>
-
-                  <div style={{ fontSize: "18px" }}>
-                    {day.min.toFixed(1)}°C / {day.max.toFixed(1)}°C
-                  </div>
-
-                  <div style={{ color: "#666" }}>
-                    {day.description}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <Forecast
+          forecast={forecast}
+          getWeatherIcon={getWeatherIcon}
+        />
 
         {/* Favorites section */}
         <div style={{ marginTop: "40px" }}>
