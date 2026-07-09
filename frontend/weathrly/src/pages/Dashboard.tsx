@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { api } from "../api/axios";
+import WeatherSearch from "../components/weather/WeatherSearch";
+import CurrentWeather from "../components/weather/CurrentWeather";
 
 export default function Dashboard() {
-  const [city, setCity] = useState("");
   const [weather, setWeather] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -13,21 +14,21 @@ export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
 
   // Fetch weather
-  const fetchWeather = async () => {
-    if (!city) return;
+  const fetchWeather = async (searchedCity: string) => {
+    if (!searchedCity) return;
 
     setLoading(true);
     setError("");
     setWeather(null);
 
-        try {
-    const res = await api.get(`/weather/current?city=${city}`);
+    try {
+      const res = await api.get(`/weather/current?city=${searchedCity}`);
 
-    setWeather(res.data);
-    setActiveCity(city);
+      setWeather(res.data);
+      setActiveCity(searchedCity);
 
-    await fetchHistory();
-    await fetchForecast(city);
+      await fetchHistory();
+      await fetchForecast(searchedCity);
 
     } catch (err: any) {
     console.log(err);
@@ -196,39 +197,16 @@ export default function Dashboard() {
         {user?.email}
       </p>
 
-      {/* Search box */}
-      <div>
-        <input
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          placeholder="Enter city..."
-        />
-
-        <button onClick={fetchWeather}>
-          Search
-        </button>
-      </div>
+      <WeatherSearch onSearch={fetchWeather} />
 
       {/* Loading error */}
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* Weather display */}
-      {weather && (
-        <div style={{ marginTop: "20px" }}>
-          <h2>{weather.city}</h2>
-          <p>Temperature: {weather.temperature}°C</p>
-          <p>Feels like: {weather.feels_like}°C</p>
-          <p>Humidity: {weather.humidity}%</p>
-          <p>{weather.description}</p>
-          <button
-            onClick={addFavorite}
-            style={{ marginTop: "10px" }}
-          >
-            Save Favorite ⭐
-          </button>
-        </div>
-      )}
+      <CurrentWeather
+        weather={weather}
+        onFavorite={addFavorite}
+      />
 
       {/* History section */}
       <div style={{ marginTop: "40px" }}>
