@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { api } from "../api/axios";
 import WeatherSearch from "../components/weather/WeatherSearch";
-import CurrentWeather from "../components/weather/CurrentWeather";
 import Forecast from "../components/weather/Forecast";
+import DashboardHeader from "../components/dashboard/DashboardHeader";
+import SearchHistory from "../components/dashboard/SearchHistory";
+import FavoriteList from "../components/dashboard/FavoriteList";
+import CurrentWeather from "../components/weather/CurrentWeather";
 
 export default function Dashboard() {
   const [weather, setWeather] = useState<any>(null);
@@ -163,6 +166,15 @@ export default function Dashboard() {
     }
   };
 
+  const clearHistory = async () => {
+    try {
+      await api.delete("/history/");
+      await fetchHistory();
+    } catch (err) {
+      console.log("Failed to clear history", err);
+    }
+  };
+
 
   const getWeatherIcon = (desc: string) => {
     const d = desc.toLowerCase();
@@ -206,15 +218,12 @@ export default function Dashboard() {
   
   return (
     <div style={{ maxWidth: "600px", margin: "100px auto" }}>
-      <h1>Weathrly Dashboard</h1>
 
-      <h2>
-        Welcome, {user?.username}
-      </h2>
-
-      <p>
-        {user?.email}
-      </p>
+      <DashboardHeader
+        username={user?.username || ""}
+        email={user?.email || ""}
+        onLogout={handleLogout}
+      />
 
       <WeatherSearch onSearch={fetchWeather} />
 
@@ -227,79 +236,24 @@ export default function Dashboard() {
         onFavorite={addFavorite}
       />
 
-      {/* History section */}
-      <div style={{ marginTop: "40px" }}>
-        <h2>Search History</h2>
+      <SearchHistory
+        history={history}
+        activeCity={activeCity}
+        onSelectCity={fetchWeatherFromFavorite}
+        onClearHistory={clearHistory}
+      />
 
-        {history.length === 0 ? (
-          <p>No history yet</p>
-        ) : (
-          <ul>
-            {history.map((item) => (
-              <li key={item.id}>
-                <span
-                  onClick={() => fetchWeatherFromFavorite(item.city_name)}
-                  style={{
-                    cursor: "pointer",
-                    marginRight: "10px",
-                    fontWeight:
-                      activeCity === item.city_name ? "bold" : "normal",
-                    color:
-                      activeCity === item.city_name ? "blue" : "black",
-                  }}
-                >
-                  {item.city_name}
-                  {item.country ? ` (${item.country})` : ""}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+      <Forecast
+        forecast={forecast}
+        getWeatherIcon={getWeatherIcon}
+      />
 
-        <Forecast
-          forecast={forecast}
-          getWeatherIcon={getWeatherIcon}
-        />
-
-        {/* Favorites section */}
-        <div style={{ marginTop: "40px" }}>
-          <h2>Favorite Cities</h2>
-
-          {favorites.length === 0 ? (
-            <p>No favorite cities yet</p>
-          ) : (
-            <ul>
-              {favorites.map((favorite) => (
-                <li key={favorite.id}>
-                  {/* Click city to reuse */}
-                  <span
-                    onClick={() => fetchWeatherFromFavorite(favorite.city_name)}
-                    style={{
-                      cursor: "pointer",
-                      marginRight: "10px",
-                      fontWeight:
-                        activeCity === favorite.city_name ? "bold" : "normal",
-                      color:
-                        activeCity === favorite.city_name ? "green" : "black",
-                    }}
-                  >
-                    {favorite.city_name}
-                    {favorite.country ? ` (${favorite.country})` : ""}
-                  </span>
-
-                  {/* Delete button */}
-                  <button onClick={() => deleteFavorite(favorite.id)}>
-                    ❌
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          </div>
-        </div>
-        <button onClick={handleLogout}>
-          Logout
-        </button>
-      </div>
+      <FavoriteList
+        favorites={favorites}
+        activeCity={activeCity}
+        onSelectCity={fetchWeatherFromFavorite}
+        onDeleteFavorite={deleteFavorite}
+      />
+    </div>
   );
 }
